@@ -93,7 +93,8 @@ void add_stubborn_set_options_to_parser(options::OptionParser &parser) {
     parser.add_enum_option<StubbornSetType>(
         "stubborn_set_type",
         stubborn_set_types,
-        "help",
+        "Choose the type of stubborn sets. Only applicable for atom-centric "
+        "stubborn sets and simple action-centric stubborn sets.",
         "strong",
         stubborn_set_types_docs);
 }
