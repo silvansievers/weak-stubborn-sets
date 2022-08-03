@@ -30,7 +30,9 @@ const vector<int> &StubbornSetsSimple::get_interfering_operators(int op1_no) {
     vector<int> &interfere_op1 = interference_relation[op1_no];
     if (!interference_relation_computed[op1_no]) {
         for (int op2_no = 0; op2_no < num_operators; ++op2_no) {
-            if (op1_no != op2_no && interfere(op1_no, op2_no)) {
+            if (op1_no != op2_no &&
+                (interfere(op1_no, op2_no) ||
+                (stubborn_set_type == stubborn_sets::StubbornSetType::WEAK && can_enable(op2_no, op1_no)))) {
                 interfere_op1.push_back(op2_no);
             }
         }

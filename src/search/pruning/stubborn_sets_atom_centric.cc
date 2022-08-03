@@ -14,6 +14,11 @@ StubbornSetsAtomCentric::StubbornSetsAtomCentric(const options::Options &opts)
     : StubbornSets(opts),
       use_sibling_shortcut(opts.get<bool>("use_sibling_shortcut")),
       atom_selection_strategy(opts.get<AtomSelectionStrategy>("atom_selection_strategy")) {
+    if (use_mutex_interference) {
+        cerr << "Using mutex interference is not supported with the atom-centric "
+                "algorithm!" << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
 }
 
 void StubbornSetsAtomCentric::initialize(const shared_ptr<AbstractTask> &task) {
@@ -182,9 +187,18 @@ void StubbornSetsAtomCentric::enqueue_nes(int op, const State &state) {
 }
 
 void StubbornSetsAtomCentric::enqueue_interferers(int op) {
-    for (const FactPair &fact : sorted_op_preconditions[op]) {
-        // Enqueue operators that disable op.
-        enqueue_sibling_producers(fact);
+    if (stubborn_set_type == stubborn_sets::StubbornSetType::STRONG ||
+        stubborn_set_type == stubborn_sets::StubbornSetType::WEAK) {
+        for (const FactPair &fact : sorted_op_preconditions[op]) {
+            if (stubborn_set_type == stubborn_sets::StubbornSetType::STRONG) {
+                // Enqueue operators that disable op.
+                enqueue_sibling_producers(fact);
+            }
+            if (stubborn_set_type == stubborn_sets::StubbornSetType::WEAK) {
+                // Enqueue operators that enable op.
+                enqueue_producers(fact);
+            }
+        }
     }
     for (const FactPair &fact : sorted_op_effects[op]) {
         // Enqueue operators that conflict with op.

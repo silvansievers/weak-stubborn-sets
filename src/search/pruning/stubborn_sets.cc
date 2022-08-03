@@ -32,13 +32,39 @@ bool contain_conflicting_fact(const vector<FactPair> &facts1,
     return false;
 }
 
+// Relies on both fact sets being sorted by variable.
+bool contain_same_fact(const vector<FactPair> &facts1,
+                       const vector<FactPair> &facts2) {
+    auto facts1_it = facts1.begin();
+    auto facts2_it = facts2.begin();
+    while (facts1_it != facts1.end() && facts2_it != facts2.end()) {
+        if (facts1_it->var < facts2_it->var) {
+            ++facts1_it;
+        } else if (facts1_it->var > facts2_it->var) {
+            ++facts2_it;
+        } else {
+            if (facts1_it->value == facts2_it->value)
+                return true;
+            ++facts1_it;
+            ++facts2_it;
+        }
+    }
+    return false;
+}
+
 StubbornSets::StubbornSets(const options::Options &opts)
     : min_required_pruning_ratio(opts.get<double>("min_required_pruning_ratio")),
       num_expansions_before_checking_pruning_ratio(
           opts.get<int>("expansions_before_checking_pruning_ratio")),
       num_pruning_calls(0),
       is_pruning_disabled(false),
-      timer(false) {
+      timer(false),
+      use_mutex_interference(opts.get<bool>("use_mutex_interference")),
+      stubborn_set_type(opts.get<StubbornSetType>("stubborn_set_type")) {
+    if (stubborn_set_type == stubborn_sets::StubbornSetType::COMPLIANT && use_mutex_interference) {
+        cerr << "Mutex interference does not work with compliant stubborn sets" << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
 }
 
 void StubbornSets::initialize(const shared_ptr<AbstractTask> &task) {
@@ -57,6 +83,20 @@ void StubbornSets::initialize(const shared_ptr<AbstractTask> &task) {
     compute_achievers(task_proxy);
 }
 
+bool StubbornSets::are_operators_mutex(int op1_no, int op2_no) const {
+    const vector<FactPair> &op1_pre = sorted_op_preconditions[op1_no];
+    const vector<FactPair> &op2_pre = sorted_op_preconditions[op2_no];
+    for (FactPair fact1 : op1_pre) {
+        FactProxy fact1_proxy(*task, fact1.var, fact1.value);
+        for (FactPair fact2 : op2_pre) {
+            if (fact1_proxy.is_mutex(FactProxy(*task, fact2.var, fact2.value))) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // Relies on op_preconds and op_effects being sorted by variable.
 bool StubbornSets::can_disable(int op1_no, int op2_no) const {
     return contain_conflicting_fact(sorted_op_effects[op1_no],
@@ -67,6 +107,12 @@ bool StubbornSets::can_disable(int op1_no, int op2_no) const {
 bool StubbornSets::can_conflict(int op1_no, int op2_no) const {
     return contain_conflicting_fact(sorted_op_effects[op1_no],
                                     sorted_op_effects[op2_no]);
+}
+
+// Relies on op_preconds and op_effects being sorted by variable.
+bool StubbornSets::can_enable(int op1_no, int op2_no) const {
+    return contain_same_fact(sorted_op_effects[op1_no],
+                             sorted_op_preconditions[op2_no]);
 }
 
 void StubbornSets::compute_sorted_operators(const TaskProxy &task_proxy) {
@@ -205,5 +251,28 @@ void add_pruning_options(options::OptionParser &parser) {
         "number of expansions before deciding whether to disable pruning",
         "1000",
         Bounds("0", "infinity"));
+    parser.add_option<bool>(
+        "use_mutex_interference",
+        "If true, consider two operators to interfere only if they interfere "
+        "according to the usual definition and if they are not mutex.",
+        "false");
+    vector<string> stubborn_set_types;
+    vector<string> stubborn_set_types_docs;
+    stubborn_set_types.push_back("strong");
+    stubborn_set_types_docs.push_back(
+        "Strong stubborn sets. This means using regular interference.");
+    stubborn_set_types.push_back("weak");
+    stubborn_set_types_docs.push_back(
+        "Weak stubborn sets. This means using weak interference and to include all "
+        "enablers of all applicable operators in the stubborn set.)");
+    stubborn_set_types.push_back("compliant");
+    stubborn_set_types_docs.push_back(
+        "Compliant stubborn sets. This means using weak interference.");
+    parser.add_enum_option<StubbornSetType>(
+        "stubborn_set_type",
+        stubborn_set_types,
+        "help",
+        "strong",
+        stubborn_set_types_docs);
 }
 }

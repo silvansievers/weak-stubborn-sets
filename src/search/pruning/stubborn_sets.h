@@ -11,6 +11,12 @@ class OptionParser;
 }
 
 namespace stubborn_sets {
+enum class StubbornSetType {
+    STRONG,
+    WEAK,
+    COMPLIANT
+};
+
 inline FactPair find_unsatisfied_condition(
     const std::vector<FactPair> &conditions, const State &state);
 
@@ -36,6 +42,9 @@ class StubbornSets : public PruningMethod {
     void compute_achievers(const TaskProxy &task_proxy);
 
 protected:
+    const bool use_mutex_interference;
+    const enum StubbornSetType stubborn_set_type;
+
     /*
       We copy some parts of the task here, so we can avoid the more expensive
       access through the task interface during the search.
@@ -53,8 +62,10 @@ protected:
        op_no is contained in the stubborn set */
     std::vector<bool> stubborn;
 
+    bool are_operators_mutex(int op1_no, int op2_no) const;
     bool can_disable(int op1_no, int op2_no) const;
     bool can_conflict(int op1_no, int op2_no) const;
+    bool can_enable(int op1_no, int op2_no) const;
 
     /*
       Return the first unsatified goal pair,

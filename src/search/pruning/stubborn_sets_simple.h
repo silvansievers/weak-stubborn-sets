@@ -16,9 +16,10 @@ class StubbornSetsSimple : public stubborn_sets::StubbornSets {
     void add_interfering(int op_no);
 
     inline bool interfere(int op1_no, int op2_no) {
-        return can_disable(op1_no, op2_no) ||
-               can_conflict(op1_no, op2_no) ||
-               can_disable(op2_no, op1_no);
+        return (!use_mutex_interference || !are_operators_mutex(op1_no, op2_no)) &&
+            (can_disable(op1_no, op2_no) ||
+            can_conflict(op1_no, op2_no) ||
+            (stubborn_set_type == stubborn_sets::StubbornSetType::STRONG && can_disable(op2_no, op1_no)));
     }
     const std::vector<int> &get_interfering_operators(int op1_no);
 protected:
