@@ -3,15 +3,18 @@
 #include "../option_parser.h"
 #include "../plugin.h"
 
-#include "../utils/logging.h"
 #include "../utils/markup.h"
-
 
 using namespace std;
 
 namespace stubborn_sets_simple {
 StubbornSetsSimple::StubbornSetsSimple(const options::Options &opts)
-    : StubbornSets(opts) {
+    : StubbornSetsActionCentric(opts),
+      use_mutex_interference(opts.get<bool>("use_mutex_interference")) {
+    if (stubborn_set_type == stubborn_sets::StubbornSetType::COMPLIANT && use_mutex_interference) {
+        cerr << "Mutex interference does not work with compliant stubborn sets" << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
 }
 
 void StubbornSetsSimple::initialize(const shared_ptr<AbstractTask> &task) {
@@ -45,14 +48,14 @@ const vector<int> &StubbornSetsSimple::get_interfering_operators(int op1_no) {
 // Add all operators that achieve the fact (var, value) to stubborn set.
 void StubbornSetsSimple::add_necessary_enabling_set(const FactPair &fact) {
     for (int op_no : achievers[fact.var][fact.value]) {
-        mark_as_stubborn(op_no);
+        enqueue_stubborn_operator(op_no);
     }
 }
 
 // Add all operators that interfere with op.
 void StubbornSetsSimple::add_interfering(int op_no) {
     for (int interferer_no : get_interfering_operators(op_no)) {
-        mark_as_stubborn(interferer_no);
+        enqueue_stubborn_operator(interferer_no);
     }
 }
 
@@ -105,6 +108,11 @@ static shared_ptr<PruningMethod> _parse(OptionParser &parser) {
             "323-331",
             "AAAI Press",
             "2014"));
+    parser.add_option<bool>(
+        "use_mutex_interference",
+        "If true, consider two operators to interfere only if they interfere "
+        "according to the usual definition and if they are not mutex.",
+        "false");
     stubborn_sets::add_stubborn_set_options_to_parser(parser);
 
     Options opts = parser.parse();

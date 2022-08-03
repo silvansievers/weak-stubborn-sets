@@ -3,9 +3,7 @@
 #include "../option_parser.h"
 #include "../plugin.h"
 
-#include "../utils/logging.h"
 #include "../utils/markup.h"
-#include "../utils/memory.h"
 
 using namespace std;
 
@@ -14,11 +12,6 @@ StubbornSetsAtomCentric::StubbornSetsAtomCentric(const options::Options &opts)
     : StubbornSets(opts),
       use_sibling_shortcut(opts.get<bool>("use_sibling_shortcut")),
       atom_selection_strategy(opts.get<AtomSelectionStrategy>("atom_selection_strategy")) {
-    if (use_mutex_interference) {
-        cerr << "Using mutex interference is not supported with the atom-centric "
-                "algorithm!" << endl;
-        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
-    }
 }
 
 void StubbornSetsAtomCentric::initialize(const shared_ptr<AbstractTask> &task) {
@@ -209,7 +202,7 @@ void StubbornSetsAtomCentric::enqueue_interferers(int op) {
     }
 }
 
-void StubbornSetsAtomCentric::initialize_stubborn_set(const State &state) {
+void StubbornSetsAtomCentric::compute_stubborn_set(const State &state) {
     assert(producer_queue.empty());
     assert(consumer_queue.empty());
     // Reset data structures from previous call.

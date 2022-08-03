@@ -11,9 +11,6 @@ after the corresponding tracker issues.
 
 ## Changes since the last release
 
-- driver: skip __pycache__ directory when collection portfolio aliases
-  <https://issues.fast-downward.org/issue1055>
-
 - search and pruning module, for users: Fix performance regression
   introduced in issue1042 due to always measuring time spent in
   pruning methods. This is now only done in verbose verbosity level.
@@ -29,6 +26,14 @@ after the corresponding tracker issues.
   'derived_lm_cost=1' performs best, since a plan is usually found faster if we
   focus on its length rather than its cost.
   <https://issues.fast-downward.org/issue1009>
+
+- driver, for developers: skip __pycache__ directory when collection portfolio
+  aliases
+  <https://issues.fast-downward.org/issue1055>
+
+- pruning module, for developers: we cleaned up the internal structure of
+  stubborn set pruning.
+  <https://issues.fast-downward.org/issue1059>
 
 ## Fast Downward 22.06
 
