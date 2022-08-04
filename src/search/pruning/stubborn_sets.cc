@@ -90,6 +90,13 @@ void add_stubborn_set_options_to_parser(options::OptionParser &parser) {
     stubborn_set_types.push_back("compliant");
     stubborn_set_types_docs.push_back(
         "Compliant stubborn sets. This means using weak interference.");
+    stubborn_set_types.push_back("compliant_relaxed");
+    stubborn_set_types_docs.push_back(
+        "Compliant stubborn sets, relaxed. This means using weak interference, "
+        "however only including disabled operators if they are disabled on a "
+        "fact which agrees with the current state. (Otherwise, the operator "
+        "would already not be applicable due to that fact.) Currently only"
+        "available with simple stubborn sets.");
     parser.add_enum_option<StubbornSetType>(
         "stubborn_set_type",
         stubborn_set_types,

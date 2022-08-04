@@ -80,6 +80,31 @@ bool StubbornSetsActionCentric::can_disable(int op1_no, int op2_no) const {
                                     sorted_op_preconditions[op2_no]);
 }
 
+// Relies on op_preconds and op_effects being sorted by variable.
+bool StubbornSetsActionCentric::can_disable_with_state(
+    int op1_no, int op2_no, const State &state) const {
+    auto facts1_it = sorted_op_effects[op1_no].begin();
+    auto facts2_it = sorted_op_preconditions[op2_no].begin();
+    while (facts1_it != sorted_op_effects[op1_no].end() && facts2_it != sorted_op_preconditions[op2_no].end()) {
+        // skip facts that hinder application of op2 in state anyway.
+        if (state[facts2_it->var].get_value() != facts2_it->value) {
+            ++facts2_it;
+            continue;
+        }
+        if (facts1_it->var < facts2_it->var) {
+            ++facts1_it;
+        } else if (facts1_it->var > facts2_it->var) {
+            ++facts2_it;
+        } else {
+            if (facts1_it->value != facts2_it->value)
+                return true;
+            ++facts1_it;
+            ++facts2_it;
+        }
+    }
+    return false;
+}
+
 // Relies on op_effect being sorted by variable.
 bool StubbornSetsActionCentric::can_conflict(int op1_no, int op2_no) const {
     return contain_conflicting_fact(sorted_op_effects[op1_no],

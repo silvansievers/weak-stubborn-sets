@@ -16,10 +16,17 @@ class StubbornSetsSimple : public stubborn_sets::StubbornSetsActionCentric {
 
     void add_necessary_enabling_set(const FactPair &fact);
     void add_interfering(int op_no);
+    void add_interfering_with_state(int op_no, const State &state);
 
     inline bool interfere(int op1_no, int op2_no) {
         return (!use_mutex_interference || !are_operators_mutex(op1_no, op2_no)) &&
             (can_disable(op1_no, op2_no) ||
+            can_conflict(op1_no, op2_no) ||
+            (stubborn_set_type == stubborn_sets::StubbornSetType::STRONG && can_disable(op2_no, op1_no)));
+    }
+    inline bool interfere_in_state(int op1_no, int op2_no, const State &state) {
+        return (!use_mutex_interference || !are_operators_mutex(op1_no, op2_no)) &&
+            (can_disable_with_state(op1_no, op2_no, state) ||
             can_conflict(op1_no, op2_no) ||
             (stubborn_set_type == stubborn_sets::StubbornSetType::STRONG && can_disable(op2_no, op1_no)));
     }

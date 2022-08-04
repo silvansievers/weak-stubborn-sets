@@ -9,7 +9,8 @@ namespace stubborn_sets {
 enum class StubbornSetType {
     STRONG,
     WEAK,
-    COMPLIANT
+    COMPLIANT,
+    COMPLIANT_RELAXED
 };
 
 inline FactPair find_unsatisfied_condition(

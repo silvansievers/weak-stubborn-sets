@@ -59,6 +59,17 @@ void StubbornSetsSimple::add_interfering(int op_no) {
     }
 }
 
+// Add all operators that interfere with op.
+void StubbornSetsSimple::add_interfering_with_state(int op_no, const State &state) {
+    for (int op2_no = 0; op2_no < num_operators; ++op2_no) {
+        if (op_no != op2_no &&
+            (interfere_in_state(op_no, op2_no, state) ||
+             (stubborn_set_type == stubborn_sets::StubbornSetType::WEAK && can_enable(op2_no, op_no)))) {
+            enqueue_stubborn_operator(op2_no);
+        }
+    }
+}
+
 void StubbornSetsSimple::initialize_stubborn_set(const State &state) {
     // Add a necessary enabling set for an unsatisfied goal.
     FactPair unsatisfied_goal = find_unsatisfied_goal(state);
@@ -70,10 +81,14 @@ void StubbornSetsSimple::handle_stubborn_operator(const State &state,
                                                   int op_no) {
     FactPair unsatisfied_precondition = find_unsatisfied_precondition(op_no, state);
     if (unsatisfied_precondition == FactPair::no_fact) {
-        /* no unsatisfied precondition found
-           => operator is applicable
-           => add all interfering operators */
-        add_interfering(op_no);
+        if (stubborn_set_type == stubborn_sets::StubbornSetType::COMPLIANT_RELAXED) {
+            add_interfering_with_state(op_no, state);
+        } else {
+            /* no unsatisfied precondition found
+               => operator is applicable
+               => add all interfering operators */
+            add_interfering(op_no);
+        }
     } else {
         /* unsatisfied precondition found
            => add a necessary enabling set for it */

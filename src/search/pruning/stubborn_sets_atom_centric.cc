@@ -12,6 +12,11 @@ StubbornSetsAtomCentric::StubbornSetsAtomCentric(const options::Options &opts)
     : StubbornSets(opts),
       use_sibling_shortcut(opts.get<bool>("use_sibling_shortcut")),
       atom_selection_strategy(opts.get<AtomSelectionStrategy>("atom_selection_strategy")) {
+    if (stubborn_set_type == stubborn_sets::StubbornSetType::COMPLIANT_RELAXED) {
+        cerr << "compliant_relaxed stubborn sets incompatible with "
+                "atom-centric stubborn sets." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
 }
 
 void StubbornSetsAtomCentric::initialize(const shared_ptr<AbstractTask> &task) {

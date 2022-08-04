@@ -20,6 +20,7 @@ protected:
     explicit StubbornSetsActionCentric(const options::Options &opts);
     bool are_operators_mutex(int op1_no, int op2_no) const;
     bool can_disable(int op1_no, int op2_no) const;
+    bool can_disable_with_state(int op1_no, int op2_no, const State &state) const;
     bool can_conflict(int op1_no, int op2_no) const;
     bool can_enable(int op1_no, int op2_no) const;
 
