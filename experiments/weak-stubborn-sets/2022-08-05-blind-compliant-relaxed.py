@@ -96,7 +96,7 @@ exp.add_report(
     ComparativeReport(
         attributes=attributes,
         algorithm_pairs=[
-            (f'{REVISION}-{pair[0].nick}', f'{REVISION}-{pair[0].nick}') for pair in combinations(SIMPLE_CONFIGS, 2)
+            (f'{REVISION}-{pair[0].nick}', f'{REVISION}-{pair[1].nick}') for pair in combinations(SIMPLE_CONFIGS, 2)
         ],
     ),
     name=report_name,
