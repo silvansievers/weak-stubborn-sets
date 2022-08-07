@@ -122,7 +122,7 @@ exp.add_absolute_report_step(
 )
 
 exp.add_fetcher(
-    'data/2022-08-03-blind-eval',
+    'data/2022-08-03-lmcut-eval',
     filter_algorithm=[f"{OLD_REV}-{config.nick}" for config in CONFIGS],
     merge=True
 )
